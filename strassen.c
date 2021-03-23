@@ -275,7 +275,7 @@ void straussen_mult(int **A, int **B, int **C, int d){
 void read_file(char filename[], int **A, int **B) {
     printf("%s", filename);
     printf("\n");
-
+    
     FILE* file;
     if ((file = fopen(filename,"r")) == NULL){
        printf("Error! opening file");
@@ -290,6 +290,7 @@ void read_file(char filename[], int **A, int **B) {
             A[i][j] = num;
         }
     }
+    
     for(int i=0;i<n;i++){
         B[i] = (int *)malloc(n * sizeof(int));
         for(int j=0;j<n;j++){
@@ -297,7 +298,9 @@ void read_file(char filename[], int **A, int **B) {
             B[i][j] = num;
         }
     }
+    
     fclose(file);
+    //exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -327,6 +330,7 @@ int main(int argc, char *argv[])
             matinit(0, C, n, 0);
             // matprint(A, n);
             // matprint(B, n);
+            nc=80;
             straussen_mult(A,B,C,n);
             // matprint(C,n);
             matdiagprint(C, n);

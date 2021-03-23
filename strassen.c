@@ -28,6 +28,7 @@ int rand_bool(float p){ //p is success probability
         return 1;
     }
 }
+
 void matinit(int mode, int **M, int d, float p){
     switch (mode)
     {
@@ -50,6 +51,7 @@ void matinit(int mode, int **M, int d, float p){
         break;
     }
 }
+
 // A, B is dxd square matrices,
 // multiply AB to get C which is dxd,
 // C is passed by reference
@@ -71,6 +73,13 @@ void matprint(int **M, int d){
         printf("\n");
     }
     printf("\n");
+}
+
+void matdiagprint(int **M, int d){
+    for(int i = 0; i < d; i++){
+        printf("%d ", M[i][i]);
+        printf("\n");
+    }
 }
 
 void mathalve(int **M, int **A, int **B, int **C, int **D, int d){
@@ -95,6 +104,7 @@ void matcombine(int **M, int **A, int **B, int **C, int **D, int d){
         }
     }
 }
+
 void matadd(int **A, int **B, int **C, int d){
     for(int i=0;i<d;i++){
         for(int j=0;j<d;j++){
@@ -102,6 +112,7 @@ void matadd(int **A, int **B, int **C, int d){
         }
     }
 }
+
 void matsub(int **A, int **B, int **C, int d){
     for(int i=0;i<d;i++){
         for(int j=0;j<d;j++){
@@ -109,6 +120,7 @@ void matsub(int **A, int **B, int **C, int d){
         }
     }
 }
+
 int matdiagsum(int **M, int n){
     int total = 0;
     for(int i=0;i<n;i++){
@@ -116,6 +128,7 @@ int matdiagsum(int **M, int n){
     }
     return total;
 }
+
 void matcopy(int **A, int **B, int n){
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
@@ -123,6 +136,7 @@ void matcopy(int **A, int **B, int n){
         }
     }
 }
+
 void straussen_mult(int **A, int **B, int **C, int d){
     if(d%2==1){
         d += 1;
@@ -257,6 +271,35 @@ void straussen_mult(int **A, int **B, int **C, int d){
         free(L);
     }
 }
+
+void read_file(char filename[], int **A, int **B) {
+    printf("%s", filename);
+    printf("\n");
+
+    FILE* file;
+    if ((file = fopen(filename,"r")) == NULL){
+       printf("Error! opening file");
+       exit(1);
+    }
+
+    int num = 0;
+    for(int i=0;i<n;i++){
+        A[i] = (int *)malloc(n * sizeof(int));
+        for(int j=0;j<n;j++){
+            fscanf(file, "%d", &num);
+            A[i][j] = num;
+        }
+    }
+    for(int i=0;i<n;i++){
+        B[i] = (int *)malloc(n * sizeof(int));
+        for(int j=0;j<n;j++){
+            fscanf(file, "%d", &num);
+            B[i][j] = num;
+        }
+    }
+    fclose(file);
+}
+
 int main(int argc, char *argv[])
 {
     // begin = clock();
@@ -268,7 +311,7 @@ int main(int argc, char *argv[])
         // more random seed based on external entropy - the time and some program addresses
         pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf,
                         (intptr_t)&round);
-    }else{
+    } else{
         pcg32_srandom_r(&rng, 50u, 124u); // fixed seed 
     }
     
@@ -280,23 +323,34 @@ int main(int argc, char *argv[])
     {
         case 0:
         {
-            nc = 80; // crossover point
-            float p = param1;
-            int **D = (int **)malloc(n * sizeof(int *));
-            matinit(1, A, n, p);
-            matinit(0, B, n, 0);
-            matcopy(A, B, n);
+            read_file(argv[3], A, B);
             matinit(0, C, n, 0);
-            matinit(0, D, n, 0);
+            // matprint(A, n);
+            // matprint(B, n);
             straussen_mult(A,B,C,n);
-            straussen_mult(A,C,D,n);
-            // matprint(A,n);
-            // matprint(B,n);
             // matprint(C,n);
-            // matprint(D,n);
-            printf("Number of triangles in the random graph with p=%3f: %d.\n", p, matdiagsum(D,n)/6);
+            matdiagprint(C, n);
             break;
         }
+        // case 0:
+        // {
+        //     nc = 80; // crossover point
+        //     float p = param1;
+        //     int **D = (int **)malloc(n * sizeof(int *));
+        //     matinit(1, A, n, p);
+        //     matinit(0, B, n, 0);
+        //     matcopy(A, B, n);
+        //     matinit(0, C, n, 0);
+        //     matinit(0, D, n, 0);
+        //     straussen_mult(A,B,C,n);
+        //     straussen_mult(A,C,D,n);
+        //     // matprint(A,n);
+        //     // matprint(B,n);
+        //     // matprint(C,n);
+        //     // matprint(D,n);
+        //     printf("Number of triangles in the random graph with p=%3f: %d.\n", p, matdiagsum(D,n)/6);
+        //     break;
+        // }
         case 1:
         {
             int step = (int)param1;

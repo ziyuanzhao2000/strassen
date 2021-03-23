@@ -77,9 +77,9 @@ void matprint(int **M, int d){
 
 void matdiagprint(int **M, int d){
     for(int i = 0; i < d; i++){
-        printf("%d ", M[i][i]);
-        printf("\n");
+        printf("%d\n", M[i][i]);
     }
+    printf("\n");
 }
 
 void mathalve(int **M, int **A, int **B, int **C, int **D, int d){
@@ -273,20 +273,18 @@ void straussen_mult(int **A, int **B, int **C, int d){
 }
 
 void read_file(char filename[], int **A, int **B) {
-    printf("%s", filename);
-    printf("\n");
-    
-    FILE* file;
-    if ((file = fopen(filename,"r")) == NULL){
-       printf("Error! opening file");
-       exit(1);
-    }
+    // FILE* file;
+    // if ((file = fopen(filename, "r")) == NULL){
+    //    printf("Error! opening file");
+    //    exit(1);
+    // }
+    FILE* file = fopen(filename, "r");
 
     int num = 0;
     for(int i=0;i<n;i++){
         A[i] = (int *)malloc(n * sizeof(int));
         for(int j=0;j<n;j++){
-            fscanf(file, "%d", &num);
+            int ret = fscanf(file, "%d", &num);
             A[i][j] = num;
         }
     }
@@ -294,13 +292,12 @@ void read_file(char filename[], int **A, int **B) {
     for(int i=0;i<n;i++){
         B[i] = (int *)malloc(n * sizeof(int));
         for(int j=0;j<n;j++){
-            fscanf(file, "%d", &num);
+            int ret = fscanf(file, "%d", &num);
             B[i][j] = num;
         }
     }
     
     fclose(file);
-    //exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -308,12 +305,11 @@ int main(int argc, char *argv[])
     // begin = clock();
     flag = atoi(argv[1]);
     n = atoi(argv[2]);
-    float param1 = atof(argv[3]);
 
     if(flag == 0){
         // more random seed based on external entropy - the time and some program addresses
         pcg32_srandom_r(&rng, time(NULL) ^ (intptr_t)&printf,
-                        (intptr_t)&round);
+                        (intptr_t)&scanf);
     } else{
         pcg32_srandom_r(&rng, 50u, 124u); // fixed seed 
     }
@@ -327,11 +323,12 @@ int main(int argc, char *argv[])
         case 0:
         {
             read_file(argv[3], A, B);
-            matinit(0, C, n, 0);
             // matprint(A, n);
             // matprint(B, n);
+            matinit(0, C, n, 0);
             nc=80;
             straussen_mult(A,B,C,n);
+            // matmult(A, B, C, n);
             // matprint(C,n);
             matdiagprint(C, n);
             break;
@@ -357,6 +354,7 @@ int main(int argc, char *argv[])
         // }
         case 1:
         {
+            float param1 = atof(argv[3]);
             int step = (int)param1;
             matinit(1, A, n, 0.5);
             matinit(1, B, n, 0.5);   

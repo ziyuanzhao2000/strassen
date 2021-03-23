@@ -94,15 +94,28 @@ void mathalve(int **M, int **A, int **B, int **C, int **D, int d){
 }
 
 // the reverse of mathalve, combine ABCD into M 
-void matcombine(int **M, int **A, int **B, int **C, int **D, int d){
-    for(int i=0;i<d;i++){
+void matcombine(int **M, int **A, int **B, int **C, int **D, int d, int odd){
+    if(odd==0){
+        for(int i=0;i<d;i++){
         for(int j=0;j<d;j++){
             M[i][j] = A[i][j];
             M[i][j+d] = B[i][j];
             M[i+d][j] = C[i][j];
             M[i+d][j+d] = D[i][j];
         }
+        }
     }
+    else{
+        for(int i=0;i<d-1;i++){
+        for(int j=0;j<d-1;j++){
+            M[i][j] = A[i][j];
+            M[i][j+d] = B[i][j];
+            M[i+d][j] = C[i][j];
+            M[i+d][j+d] = D[i][j];
+        }
+        }
+    }
+    
 }
 
 void matadd(int **A, int **B, int **C, int d){
@@ -138,7 +151,9 @@ void matcopy(int **A, int **B, int n){
 }
 
 void straussen_mult(int **A, int **B, int **C, int d){
+    int augmented = 0;
     if(d%2==1){
+        augmented = 1;
         d += 1;
         A = (int**)realloc(A, d* sizeof(int *));  // pray to god that it doesn't return nullptr
         B = (int**)realloc(B, d* sizeof(int *));
@@ -247,7 +262,7 @@ void straussen_mult(int **A, int **B, int **C, int d){
         matsub(L,P7,L,d);
 
         //combine into C!!
-        matcombine(C, I, J, K, L, d);
+        matcombine(C, I, J, K, L, d, augmented);
 
         //free memory
         free(A2);

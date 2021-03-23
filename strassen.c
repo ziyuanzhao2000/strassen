@@ -106,13 +106,25 @@ void matcombine(int **M, int **A, int **B, int **C, int **D, int d, int odd){
         }
     }
     else{
-        for(int i=0;i<d-1;i++){
-        for(int j=0;j<d-1;j++){
-            M[i][j] = A[i][j];
-            M[i][j+d] = B[i][j];
-            M[i+d][j] = C[i][j];
-            M[i+d][j+d] = D[i][j];
+        for(int i=0;i<d;i++){
+            for(int j=0;j<d;j++){
+                M[i][j] = A[i][j];
+            }
         }
+        for(int i=0;i<d-1;i++){
+            for(int j=0;j<d;j++){
+                M[i+d][j] = C[i][j];
+            }
+        }
+        for(int i=0;i<d;i++){
+            for(int j=0;j<d-1;j++){
+                M[i][j+d] = B[i][j];
+            }
+        }
+        for(int i=0;i<d-1;i++){
+            for(int j=0;j<d-1;j++){
+                M[i+d][j+d] = D[i][j];
+            }
         }
     }
     

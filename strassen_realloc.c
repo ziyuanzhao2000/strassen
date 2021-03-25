@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <assert.h>
 #include "pcg_basic.h"
 
 int flag;      // for debugging
@@ -41,6 +40,7 @@ void matinit(int mode, int **M, int d, float p){
             }
         }
         break;
+
     case 2:
         for(int i=0;i<d;i++){
             M[i] = (int *)malloc(d * sizeof(int));
@@ -69,7 +69,7 @@ void matmult(int **A, int **B, int **C, int d){
     // for(int i = 0; i < d; i++){
     //     for(int j=0;j<d;j++){
     //         for(int k=0;k<d;k++){
-    //             C[i][j] += A[i][k] * B[k][j]; //just definition of matrix mult...
+    //             C[i][j] += A[i][k] * B[k][j]; // definition of matrix mult
     //         }
     //     }
     // }
@@ -116,12 +116,12 @@ void mathalve(int **M, int **A, int **B, int **C, int **D, int d){
 void matcombine(int **M, int **A, int **B, int **C, int **D, int d, int odd){
     if(odd==0){
         for(int i=0;i<d;i++){
-            for(int j=0;j<d;j++){
-                M[i][j] = A[i][j];
-                M[i][j+d] = B[i][j];
-                M[i+d][j] = C[i][j];
-                M[i+d][j+d] = D[i][j];
-            }
+        for(int j=0;j<d;j++){
+            M[i][j] = A[i][j];
+            M[i][j+d] = B[i][j];
+            M[i+d][j] = C[i][j];
+            M[i+d][j+d] = D[i][j];
+        }
         }
     }
     else{
@@ -183,6 +183,29 @@ void matcopy(int **A, int **B, int n){
 
 void straussen_mult(int **A, int **B, int **C, int d){
     int augmented = 0;
+    if(d%2==1){
+        augmented = 1;
+        d += 1;
+        A = (int**)realloc(A, d* sizeof(int *));
+        B = (int**)realloc(B, d* sizeof(int *));
+        C = (int**)realloc(C, d* sizeof(int *));
+        for(int row=0; row<d-1; row++){
+            A[row] = (int*)realloc(A[row], d* sizeof(int));
+            B[row] = (int*)realloc(B[row], d* sizeof(int));
+            C[row] = (int*)realloc(C[row], d* sizeof(int));
+            A[row][d-1] = 0;
+            B[row][d-1] = 0;
+            C[row][d-1] = 0;
+        }
+        A[d-1] = (int*)malloc(d* sizeof(int));
+        B[d-1] = (int*)malloc(d* sizeof(int));
+        C[d-1] = (int*)malloc(d* sizeof(int));
+        for(int col=0; col<d; col++){
+            A[d-1][col] = 0;
+            B[d-1][col] = 0;
+            C[d-1][col] = 0;
+        }
+    }
     //do normal mult if below nc (crossover point)
     if(nc>=d){
         matmult(A,B,C,d);
@@ -271,7 +294,7 @@ void straussen_mult(int **A, int **B, int **C, int d){
 
         //combine into C!!
         matcombine(C, I, J, K, L, d, augmented);
-    
+
         //free memory
         free(A2);
         free(B2);
@@ -295,19 +318,21 @@ void straussen_mult(int **A, int **B, int **C, int d){
     }
 }
 
-void read_file(char filename[], int **A, int **B, int d) {
+void read_file(char filename[], int **A, int **B) {
     FILE* file = fopen(filename, "r");
 
     int num = 0;
-    for(int i=0;i<d;i++){
-        for(int j=0;j<d;j++){
+    for(int i=0;i<n;i++){
+        A[i] = (int *)malloc(n * sizeof(int));
+        for(int j=0;j<n;j++){
             int ret = fscanf(file, "%d", &num);
             A[i][j] = num;
         }
     }
     
-    for(int i=0;i<d;i++){
-        for(int j=0;j<d;j++){
+    for(int i=0;i<n;i++){
+        B[i] = (int *)malloc(n * sizeof(int));
+        for(int j=0;j<n;j++){
             int ret = fscanf(file, "%d", &num);
             B[i][j] = num;
         }
@@ -328,26 +353,20 @@ int main(int argc, char *argv[])
     } else{
         pcg32_srandom_r(&rng, 50u, 124u); // fixed seed 
     }
-
-    // pad C up to have dimension as power of 2
-    int oldn = n;
-    n = pow(2, ceil(log2(n)));
     
     int **A = (int **)malloc(n * sizeof(int *));
     int **B = (int **)malloc(n * sizeof(int *));
     int **C = (int **)malloc(n * sizeof(int *));
-    matinit(0, A, n, 0);
-    matinit(0, B, n, 0);
-    matinit(0, C, n, 0);
 
     switch(flag)
     {
         case 0:
         {
-            read_file(argv[3], A, B, oldn);
+            read_file(argv[3], A, B);
+            matinit(0, C, n, 0);
             nc=80;
             straussen_mult(A,B,C,n);
-            matdiagprint(C, oldn);
+            matdiagprint(C, n);
             break;
         }
         case 1:
@@ -355,7 +374,7 @@ int main(int argc, char *argv[])
             float param1 = atof(argv[3]);
             int step = (int)param1;
             matinit(2, A, n, 0.5);
-            matinit(2, B, n, 0.5);
+            matinit(2, B, n, 0.5);   
             printf("Now scanning the running time of Strassen's algo with n = %d and step size = %d.\n", n, step);
             double min_time = 1e20;
             int min_nc = 0;
@@ -376,8 +395,8 @@ int main(int argc, char *argv[])
         }
         case 2:
         {
-            matinit(2, A, n, 0.5);
-            matinit(2, B, n, 0.5);   
+            matinit(1, A, n, 0.5);
+            matinit(1, B, n, 0.5);   
             printf("Now calculating matrix product using conventional multiplication.\n");
             matinit(0, C, n, 0);
             begin = clock();
